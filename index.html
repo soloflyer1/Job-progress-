@@ -15,7 +15,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding-top: 50px;
+    padding-top: 40px;
+    padding-bottom: 80px; /* space for chat */
   }
 
   h1 {
@@ -30,17 +31,18 @@
     max-width: 500px;
     background: rgba(255,255,255,0.2);
     border-radius: 20px;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
   }
   #progressBar {
-    height: 20px;
+    height: 25px;
     width: 0%;
-    background: #00ffcc;
+    background: #00ccff;
     border-radius: 20px;
     text-align: center;
     color: #000;
     font-weight: bold;
-    line-height: 20px;
+    line-height: 25px;
+    transition: width 0.5s ease-in-out;
   }
 
   .steps {
@@ -64,7 +66,7 @@
   }
 
   .step.done {
-    background: rgba(0,255,204,0.2);
+    background: rgba(0,204,255,0.2);
     transform: scale(1.02);
   }
 
@@ -87,7 +89,7 @@
     color: #fff;
   }
 
-  /* Chat box */
+  /* Collapsible Chat Box */
   #chat-box {
     position: fixed;
     bottom: 20px;
@@ -154,6 +156,15 @@
   #chat-box.minimized #clearBtn {
     display: none;
   }
+
+  /* Confetti Canvas */
+  #confetti-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 2000;
+  }
 </style>
 </head>
 <body>
@@ -184,10 +195,13 @@
   <button id="clearBtn">Clear Chat</button>
 </div>
 
+<canvas id="confetti-canvas"></canvas>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
 import { getDatabase, ref, push, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-database.js";
 
+// Firebase setup
 const firebaseConfig = {
   apiKey: "AIzaSyAeaNbgbfnOX5i3B3TIlZ7uwLXK86dOOgo",
   authDomain: "private-tracker-85553.firebaseapp.com",
@@ -196,11 +210,11 @@ const firebaseConfig = {
   messagingSenderId: "542425150653",
   appId: "1:542425150653:web:76a2065694dfb155ca73d4"
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const messagesRef = ref(db, 'messages');
 
+// DOM Elements
 const messagesDiv = document.getElementById('messages');
 const messageInput = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
@@ -208,8 +222,18 @@ const clearBtn = document.getElementById('clearBtn');
 const chatBox = document.getElementById('chat-box');
 const toggleBtn = document.getElementById('toggleBtn');
 const progressBar = document.getElementById('progressBar');
+const confettiCanvas = document.getElementById('confetti-canvas');
+const confettiCtx = confettiCanvas.getContext('2d');
 
-// Send message
+// Responsive confetti canvas
+function resizeCanvas() {
+  confettiCanvas.width = window.innerWidth;
+  confettiCanvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+// Chat functionality
 sendBtn.addEventListener('click', () => {
   const text = messageInput.value.trim();
   if(text !== "") {
@@ -218,7 +242,6 @@ sendBtn.addEventListener('click', () => {
   }
 });
 
-// Listen for new messages
 onChildAdded(messagesRef, (data) => {
   const msg = document.createElement('div');
   msg.textContent = data.val().text;
@@ -230,26 +253,24 @@ onChildAdded(messagesRef, (data) => {
   messagesDiv.scrollTop = messagesDiv.scrollHeight;
 });
 
-// Clear all messages
 clearBtn.addEventListener('click', () => {
   remove(messagesRef);
   messagesDiv.innerHTML = "";
 });
 
-// Toggle chat minimize
+// Collapsible chat
 toggleBtn.addEventListener('click', () => {
   chatBox.classList.toggle('minimized');
   toggleBtn.textContent = chatBox.classList.contains('minimized') ? '+' : '–';
 });
 
-// Step done with milestone messages and progress bar
+// Step Done function
 window.markDone = function(button) {
   const stepDiv = button.parentElement;
   if(stepDiv.classList.contains('done')) return;
-  
+
   stepDiv.classList.add('done');
 
-  // Milestone messages (Hinglish)
   const stepMessages = {
     1: "💪 Prometric exam done! You are rocking!",
     2: "📄 Documents attested! Awesome!",
@@ -270,12 +291,51 @@ window.markDone = function(button) {
   progressBar.style.width = percent + '%';
   progressBar.textContent = percent + '%';
 
-  // Surprise at last step
+  // Surprise + confetti for last step
   if(doneSteps === totalSteps) {
     setTimeout(() => {
       alert("🎁 Surprise! All steps completed, love you ❤️");
+      launchConfetti();
     }, 300);
   }
+};
+
+// Simple confetti effect
+function launchConfetti() {
+  const confetti = [];
+  for(let i=0;i<200;i++){
+    confetti.push({
+      x: Math.random()*confettiCanvas.width,
+      y: Math.random()*confettiCanvas.height- confettiCanvas.height,
+      r: Math.random()*6+4,
+      d: Math.random()*200,
+      color: `hsl(${Math.random()*360},100%,50%)`,
+      tilt: Math.floor(Math.random()*10)-10
+    });
+  }
+
+  function draw(){
+    confettiCtx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height);
+    confetti.forEach((c)=>{
+      confettiCtx.beginPath();
+      confettiCtx.lineWidth = c.r/2;
+      confettiCtx.strokeStyle = c.color;
+      confettiCtx.moveTo(c.x + c.tilt + c.r/4, c.y);
+      confettiCtx.lineTo(c.x + c.tilt, c.y + c.tilt + c.r/4);
+      confettiCtx.stroke();
+    });
+    update();
+    requestAnimationFrame(draw);
+  }
+
+  function update(){
+    confetti.forEach((c,i)=>{
+      c.y += Math.cos(c.d)+1+c.r/2;
+      c.x += Math.sin(c.d);
+      if(c.y>confettiCanvas.height){c.y=-10;c.x=Math.random()*confettiCanvas.width;}
+    });
+  }
+  draw();
 }
 </script>
 
