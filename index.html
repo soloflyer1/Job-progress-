@@ -20,8 +20,27 @@
 
   h1 {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
     text-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+  }
+
+  /* Progress Bar */
+  #progressContainer {
+    width: 90%;
+    max-width: 500px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 20px;
+    margin-bottom: 30px;
+  }
+  #progressBar {
+    height: 20px;
+    width: 0%;
+    background: #00ffcc;
+    border-radius: 20px;
+    text-align: center;
+    color: #000;
+    font-weight: bold;
+    line-height: 20px;
   }
 
   .steps {
@@ -32,7 +51,6 @@
     max-width: 500px;
     box-shadow: 0 0 20px rgba(0,0,0,0.3);
     margin-bottom: 30px;
-    padding-bottom: 450px; /* Added bottom padding to prevent chat overlap */
   }
 
   .step {
@@ -42,6 +60,12 @@
     padding: 10px 0;
     border-bottom: 1px solid rgba(255,255,255,0.3);
     font-size: 1.1rem;
+    transition: all 0.3s;
+  }
+
+  .step.done {
+    background: rgba(0,255,204,0.2);
+    transform: scale(1.02);
   }
 
   .step:last-child {
@@ -76,6 +100,19 @@
     display: flex;
     flex-direction: column;
     z-index: 1000;
+    transition: all 0.3s;
+  }
+
+  #chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #007bff;
+    color: white;
+    padding: 8px 10px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    cursor: pointer;
   }
 
   #messages {
@@ -83,8 +120,6 @@
     overflow-y: auto;
     padding: 10px;
     background: #e1e8f0;
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
   }
 
   #messageInput {
@@ -106,11 +141,28 @@
 
   #sendBtn { background-color: #007bff; color: white; }
   #clearBtn { background-color: red; color: white; }
+
+  /* Minimized chat */
+  #chat-box.minimized {
+    height: 40px;
+    width: 100px;
+  }
+
+  #chat-box.minimized #messages,
+  #chat-box.minimized #messageInput,
+  #chat-box.minimized #sendBtn,
+  #chat-box.minimized #clearBtn {
+    display: none;
+  }
 </style>
 </head>
 <body>
 
 <h1>Private Tracker for Wife ❤️</h1>
+
+<div id="progressContainer">
+  <div id="progressBar">0%</div>
+</div>
 
 <div class="steps">
   <div class="step" data-step="1">1. Prometric exam (MOH Kuwait) <button onclick="markDone(this)">Done ✅</button></div>
@@ -123,15 +175,15 @@
   <div class="step" data-step="8">8. Travel <button onclick="markDone(this)">Done ✅</button></div>
 </div>
 
-<!-- Chat Box -->
+<!-- Collapsible Chat Box -->
 <div id="chat-box">
+  <div id="chat-header">Chat 💬 <span id="toggleBtn">–</span></div>
   <div id="messages"></div>
   <input type="text" id="messageInput" placeholder="Type a message...">
   <button id="sendBtn">Send</button>
   <button id="clearBtn">Clear Chat</button>
 </div>
 
-<!-- Firebase Scripts -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
 import { getDatabase, ref, push, onChildAdded, remove } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-database.js";
@@ -153,6 +205,9 @@ const messagesDiv = document.getElementById('messages');
 const messageInput = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
 const clearBtn = document.getElementById('clearBtn');
+const chatBox = document.getElementById('chat-box');
+const toggleBtn = document.getElementById('toggleBtn');
+const progressBar = document.getElementById('progressBar');
 
 // Send message
 sendBtn.addEventListener('click', () => {
@@ -181,16 +236,45 @@ clearBtn.addEventListener('click', () => {
   messagesDiv.innerHTML = "";
 });
 
-// Step done
+// Toggle chat minimize
+toggleBtn.addEventListener('click', () => {
+  chatBox.classList.toggle('minimized');
+  toggleBtn.textContent = chatBox.classList.contains('minimized') ? '+' : '–';
+});
+
+// Step done with milestone messages and progress bar
 window.markDone = function(button) {
   const stepDiv = button.parentElement;
+  if(stepDiv.classList.contains('done')) return;
+  
   stepDiv.classList.add('done');
 
-  // Check if all steps are done
-  const steps = document.querySelectorAll('.step');
-  const allDone = Array.from(steps).every(s => s.classList.contains('done'));
-  if(allDone) {
-    alert("🎉 All steps completed! Surprise for my wife! ❤️");
+  // Milestone messages (Hinglish)
+  const stepMessages = {
+    1: "💪 Prometric exam done! You are rocking!",
+    2: "📄 Documents attested! Awesome!",
+    3: "✅ QuadraBay verification complete!",
+    4: "🎉 Job offer received! Congrats!",
+    5: "🛂 Visa received! Great!",
+    6: "🖊 Visa stamped! Nice!",
+    7: "🏥 Medical test done! Fit as a fiddle!",
+    8: "✈ Travel completed! Bon voyage!"
+  };
+  const stepNum = stepDiv.dataset.step;
+  alert(stepMessages[stepNum]);
+
+  // Update progress bar
+  const totalSteps = document.querySelectorAll('.step').length;
+  const doneSteps = document.querySelectorAll('.step.done').length;
+  const percent = Math.round((doneSteps / totalSteps) * 100);
+  progressBar.style.width = percent + '%';
+  progressBar.textContent = percent + '%';
+
+  // Surprise at last step
+  if(doneSteps === totalSteps) {
+    setTimeout(() => {
+      alert("🎁 Surprise! All steps completed, love you ❤️");
+    }, 300);
   }
 }
 </script>
