@@ -14,43 +14,54 @@
   }
   h1 {
     text-align: center;
-    color: #00FF00;
+    color: #00AAFF;
     margin-bottom: 30px;
   }
   ul {
     list-style: none;
     padding: 0;
     counter-reset: step;
+    position: relative;
+  }
+  ul::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: #555;
   }
   li {
-    margin: 20px 0;
+    margin: 30px 0;
     font-size: 18px;
     display: flex;
     flex-direction: column;
-    border-left: 3px solid #555;
-    padding-left: 10px;
     position: relative;
+    padding-left: 50px;
     opacity: 0.6;
   }
   li.completed {
-    border-left: 3px solid #00FF00;
-    color: #b7ffb7;
     opacity: 1;
   }
   li::before {
     content: counter(step);
     counter-increment: step;
     position: absolute;
-    left: -30px;
+    left: 0;
     top: 0;
-    background-color: #00FF00;
-    color: #000;
-    width: 24px;
-    height: 24px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
+    background-color: #00AAFF;
+    color: #fff;
     text-align: center;
-    line-height: 24px;
+    line-height: 30px;
     font-weight: bold;
+    z-index: 1;
+  }
+  .icon {
+    margin-right: 8px;
   }
   input[type="checkbox"] {
     margin-right: 10px;
@@ -72,7 +83,7 @@
   #progress-bar {
     width: 0%;
     height: 25px;
-    background: linear-gradient(90deg, #00FF00, #00AAFF);
+    background: linear-gradient(90deg, #00AAFF, #0088CC);
     border-radius: 20px;
     text-align: center;
     color: #000;
@@ -87,15 +98,14 @@
     font-size: 16px;
     border: none;
     border-radius: 10px;
-    background-color: #00AAFF;
+    background-color: #0088CC;
     color: #fff;
     cursor: pointer;
   }
   button:hover {
-    background-color: #0088CC;
+    background-color: #006699;
   }
-  /* Popup styling */
-  #popup {
+  #popup, #milestone-msg {
     display: none;
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -108,18 +118,16 @@
     flex-direction: column;
     padding: 20px;
   }
-  #popup h2 {
-    font-size: 28px;
-    color: #00FF00;
-    margin-bottom: 20px;
+  #popup h2, #milestone-msg p {
+    color: #00AAFF;
   }
   #popup img {
     width: 150px;
     margin-top: 20px;
   }
-  #popup button {
-    background-color: #00FF00;
-    color: #000;
+  #popup button, #milestone-msg button {
+    background-color: #00AAFF;
+    color: #fff;
     margin-top: 20px;
   }
 </style>
@@ -129,21 +137,21 @@
 <h1>Job Progress Tracker</h1>
 
 <ul id="steps-list">
-  <li><label><input type="checkbox"> Prometric exam (MOH Kuwait)</label>
+  <li><label><input type="checkbox"> <span class="icon">📝</span>Prometric exam (MOH Kuwait)</label>
     <input type="text" class="note" placeholder="Add note..." /></li>
-  <li><label><input type="checkbox" disabled> Documents attestation</label>
+  <li><label><input type="checkbox" disabled> <span class="icon">📄</span>Documents attestation</label>
     <input type="text" class="note" placeholder="Add note..." /></li>
-  <li><label><input type="checkbox" disabled> Documents verification (QuadraBay)</label>
+  <li><label><input type="checkbox" disabled> <span class="icon">✅</span>Documents verification (QuadraBay)</label>
     <input type="text" class="note" placeholder="Add note..." /></li>
-  <li><label><input type="checkbox" disabled> Job offer</label>
+  <li><label><input type="checkbox" disabled> <span class="icon">💼</span>Job offer</label>
     <input type="text" class="note" placeholder="Add note..." /></li>
-  <li><label><input type="checkbox" disabled> Receive Visa</label>
+  <li><label><input type="checkbox" disabled> <span class="icon">🛂</span>Receive Visa</label>
     <input type="text" class="note" placeholder="Add note..." /></li>
-  <li><label><input type="checkbox" disabled> Visa Stamping</label>
+  <li><label><input type="checkbox" disabled> <span class="icon">✒️</span>Visa Stamping</label>
     <input type="text" class="note" placeholder="Add note..." /></li>
-  <li><label><input type="checkbox" disabled> Medical Test (Fit)</label>
+  <li><label><input type="checkbox" disabled> <span class="icon">🏥</span>Medical Test (Fit)</label>
     <input type="text" class="note" placeholder="Add note..." /></li>
-  <li><label><input type="checkbox" disabled> Travel</label>
+  <li><label><input type="checkbox" disabled> <span class="icon">✈️</span>Travel</label>
     <input type="text" class="note" placeholder="Add note..." /></li>
 </ul>
 
@@ -161,6 +169,12 @@
   <button id="close-popup">Close</button>
 </div>
 
+<!-- Milestone message -->
+<div id="milestone-msg">
+  <p id="milestone-text"></p>
+  <button id="close-msg">Close</button>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <script>
 const checkboxes = document.querySelectorAll('#steps-list input[type="checkbox"]');
@@ -170,12 +184,34 @@ const listItems = document.querySelectorAll('#steps-list li');
 const resetBtn = document.getElementById('reset-btn');
 const popup = document.getElementById('popup');
 const closePopup = document.getElementById('close-popup');
+const milestoneMsg = document.getElementById('milestone-msg');
+const milestoneText = document.getElementById('milestone-text');
+const closeMsg = document.getElementById('close-msg');
+
+// Hinglish milestone messages
+const messages = {
+  25: "Shabaash! Shuruaat achhi hai 😃",
+  50: "Waah! Adha kaam ho gaya 🏆",
+  75: "Bas thoda aur! Almost there 💪",
+  100: "Yayy! Sab steps complete ❤️ Surprise ka time hai 🎉"
+};
+
+let lastMilestone = 0;
 
 // Unlock next step in sequence
 function unlockNext() {
   for(let i=0; i<checkboxes.length-1; i++){
     if(checkboxes[i].checked) checkboxes[i+1].disabled = false;
     else checkboxes[i+1].disabled = true;
+  }
+}
+
+// Show milestone message
+function showMilestone(percent){
+  if(messages[percent] && percent !== lastMilestone){
+    lastMilestone = percent;
+    milestoneText.textContent = messages[percent];
+    milestoneMsg.style.display = "flex";
   }
 }
 
@@ -193,13 +229,15 @@ function updateProgress() {
   progressBar.style.width = percent + '%';
   progressBar.textContent = percent + '%';
   
-  if ([50,75].includes(percent)) {
+  if ([25,50,75].includes(percent)) {
     confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+    showMilestone(percent);
   }
   // If last step checked, show surprise popup
   if(percent === 100){
     confetti({ particleCount: 200, spread: 120, origin: { y: 0.6 } });
     popup.style.display = 'flex';
+    showMilestone(percent);
   }
   unlockNext();
 }
@@ -227,20 +265,21 @@ notes.forEach((note, i) => {
 resetBtn.addEventListener('click', () => {
   checkboxes.forEach((cb,i) => {
     cb.checked = false;
-    cb.disabled = i !== 0; // only first step enabled
+    cb.disabled = i !== 0;
     localStorage.setItem('step-' + i, false);
     notes[i].value = '';
     localStorage.setItem('note-' + i, '');
     listItems[i].classList.remove('completed');
   });
   popup.style.display = 'none';
+  milestoneMsg.style.display = 'none';
+  lastMilestone = 0;
   updateProgress();
 });
 
-// Close popup
-closePopup.addEventListener('click', () => {
-  popup.style.display = 'none';
-});
+// Close popup & milestone
+closePopup.addEventListener('click', () => popup.style.display = 'none');
+closeMsg.addEventListener('click', () => milestoneMsg.style.display = 'none');
 
 // Initialize
 updateProgress();
