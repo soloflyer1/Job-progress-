@@ -20,19 +20,22 @@
   ul {
     list-style: none;
     padding: 0;
+    counter-reset: step;
   }
   li {
-    margin: 15px 0;
+    margin: 20px 0;
     font-size: 18px;
     display: flex;
     flex-direction: column;
     border-left: 3px solid #555;
     padding-left: 10px;
     position: relative;
+    opacity: 0.6;
   }
   li.completed {
     border-left: 3px solid #00FF00;
     color: #b7ffb7;
+    opacity: 1;
   }
   li::before {
     content: counter(step);
@@ -91,27 +94,56 @@
   button:hover {
     background-color: #0088CC;
   }
+  /* Popup styling */
+  #popup {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0,0,0,0.85);
+    color: #fff;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    z-index: 1000;
+    flex-direction: column;
+    padding: 20px;
+  }
+  #popup h2 {
+    font-size: 28px;
+    color: #00FF00;
+    margin-bottom: 20px;
+  }
+  #popup img {
+    width: 150px;
+    margin-top: 20px;
+  }
+  #popup button {
+    background-color: #00FF00;
+    color: #000;
+    margin-top: 20px;
+  }
 </style>
 </head>
 <body>
+
 <h1>Job Progress Tracker</h1>
 
 <ul id="steps-list">
   <li><label><input type="checkbox"> Prometric exam (MOH Kuwait)</label>
     <input type="text" class="note" placeholder="Add note..." /></li>
-  <li><label><input type="checkbox"> Documents attestation</label>
+  <li><label><input type="checkbox" disabled> Documents attestation</label>
     <input type="text" class="note" placeholder="Add note..." /></li>
-  <li><label><input type="checkbox"> Documents verification (QuadraBay)</label>
+  <li><label><input type="checkbox" disabled> Documents verification (QuadraBay)</label>
     <input type="text" class="note" placeholder="Add note..." /></li>
-  <li><label><input type="checkbox"> Job offer</label>
+  <li><label><input type="checkbox" disabled> Job offer</label>
     <input type="text" class="note" placeholder="Add note..." /></li>
-  <li><label><input type="checkbox"> Receive Visa</label>
+  <li><label><input type="checkbox" disabled> Receive Visa</label>
     <input type="text" class="note" placeholder="Add note..." /></li>
-  <li><label><input type="checkbox"> Visa Stamping</label>
+  <li><label><input type="checkbox" disabled> Visa Stamping</label>
     <input type="text" class="note" placeholder="Add note..." /></li>
-  <li><label><input type="checkbox"> Medical Test (Fit)</label>
+  <li><label><input type="checkbox" disabled> Medical Test (Fit)</label>
     <input type="text" class="note" placeholder="Add note..." /></li>
-  <li><label><input type="checkbox"> Travel</label>
+  <li><label><input type="checkbox" disabled> Travel</label>
     <input type="text" class="note" placeholder="Add note..." /></li>
 </ul>
 
@@ -121,6 +153,14 @@
 
 <button id="reset-btn">Reset Progress</button>
 
+<!-- Surprise popup -->
+<div id="popup">
+  <h2>🎉 Congratulations! 🎉</h2>
+  <p>All steps completed! Here’s a special surprise for you ❤️</p>
+  <img src="https://media.giphy.com/media/111ebonMs90YLu/giphy.gif" alt="Surprise GIF">
+  <button id="close-popup">Close</button>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <script>
 const checkboxes = document.querySelectorAll('#steps-list input[type="checkbox"]');
@@ -128,29 +168,40 @@ const notes = document.querySelectorAll('.note');
 const progressBar = document.getElementById('progress-bar');
 const listItems = document.querySelectorAll('#steps-list li');
 const resetBtn = document.getElementById('reset-btn');
+const popup = document.getElementById('popup');
+const closePopup = document.getElementById('close-popup');
 
+// Unlock next step in sequence
+function unlockNext() {
+  for(let i=0; i<checkboxes.length-1; i++){
+    if(checkboxes[i].checked) checkboxes[i+1].disabled = false;
+    else checkboxes[i+1].disabled = true;
+  }
+}
+
+// Update progress and milestone confetti
 function updateProgress() {
-  const total = checkboxes.length;
+  let total = checkboxes.length;
   let checked = 0;
   checkboxes.forEach((cb, i) => {
-    if(cb.checked) {
+    if(cb.checked){
       checked++;
       listItems[i].classList.add('completed');
-    } else {
-      listItems[i].classList.remove('completed');
-    }
+    } else listItems[i].classList.remove('completed');
   });
   const percent = Math.round((checked / total) * 100);
   progressBar.style.width = percent + '%';
   progressBar.textContent = percent + '%';
   
-  if ([50,75,100].includes(percent)) {
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 }
-    });
+  if ([50,75].includes(percent)) {
+    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
   }
+  // If last step checked, show surprise popup
+  if(percent === 100){
+    confetti({ particleCount: 200, spread: 120, origin: { y: 0.6 } });
+    popup.style.display = 'flex';
+  }
+  unlockNext();
 }
 
 // Load saved state
@@ -172,17 +223,26 @@ notes.forEach((note, i) => {
   });
 });
 
+// Reset button
 resetBtn.addEventListener('click', () => {
   checkboxes.forEach((cb,i) => {
     cb.checked = false;
+    cb.disabled = i !== 0; // only first step enabled
     localStorage.setItem('step-' + i, false);
     notes[i].value = '';
     localStorage.setItem('note-' + i, '');
     listItems[i].classList.remove('completed');
   });
+  popup.style.display = 'none';
   updateProgress();
 });
 
+// Close popup
+closePopup.addEventListener('click', () => {
+  popup.style.display = 'none';
+});
+
+// Initialize
 updateProgress();
 </script>
 
