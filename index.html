@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Job Process Progress</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .container {
+      width: 90%;
+      max-width: 600px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+    .progress-container {
+      width: 100%;
+      background: #e0e0e0;
+      border-radius: 20px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .progress-bar {
+      height: 30px;
+      width: 0%;
+      background: linear-gradient(90deg, #4caf50, #81c784);
+      text-align: center;
+      line-height: 30px;
+      color: white;
+      font-weight: bold;
+      transition: width 0.4s ease;
+    }
+    .steps {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      text-align: left;
+      display: inline-block;
+    }
+    .steps li {
+      margin: 8px 0;
+      font-size: 16px;
+    }
+    .steps input {
+      margin-right: 8px;
+    }
+    .label {
+      margin: 10px 0;
+      font-size: 18px;
+      font-weight: 500;
+    }
+    .reset-btn {
+      margin-top: 15px;
+      padding: 8px 15px;
+      background: #f44336;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .reset-btn:hover {
+      background: #d32f2f;
+    }
+    .congrats {
+      display: none;
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
+      color: #4caf50;
+      animation: pop 0.8s ease;
+    }
+    @keyframes pop {
+      0% { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="confetti"></canvas>
+
+  <div class="container">
+    <div class="progress-container">
+      <div class="progress-bar" id="progress-bar">0%</div>
+    </div>
+    <div class="label" id="progress-label">Progress: 0%</div>
+
+    <ul class="steps">
+      <li><input type="checkbox" class="step"> e-Migrate Registration</li>
+      <li><input type="checkbox" class="step"> OMCL Application</li>
+      <li><input type="checkbox" class="step"> Dataflow Verification</li>
+      <li><input type="checkbox" class="step"> MOH/Prometric Exam</li>
+      <li><input type="checkbox" class="step"> Job Offer</li>
+      <li><input type="checkbox" class="step"> Visa & Travel</li>
+    </ul>
+
+    <br>
+    <button class="reset-btn" onclick="resetProgress()">Reset Progress</button>
+
+    <div class="congrats" id="congrats">🎉 Congratulations! All steps completed! 🎉</div>
+  </div>
+
+  <script>
+    const checkboxes = document.querySelectorAll('.step');
+    const bar = document.getElementById("progress-bar");
+    const label = document.getElementById("progress-label");
+    const congrats = document.getElementById("congrats");
+
+    function updateProgress() {
+      const total = checkboxes.length;
+      const completed = document.querySelectorAll('.step:checked').length;
+      const percent = Math.round((completed / total) * 100);
+
+      bar.style.width = percent + "%";
+      bar.textContent = percent + "%";
+      label.textContent = "Progress: " + percent + "%";
+
+      // Save checked states
+      const states = [];
+      checkboxes.forEach(cb => states.push(cb.checked));
+      localStorage.setItem("jobProgress", JSON.stringify(states));
+
+      // Show/hide congratulations + confetti
+      if (percent === 100) {
+        congrats.style.display = "block";
+        startConfetti();
+      } else {
+        congrats.style.display = "none";
+        stopConfetti();
+      }
+    }
+
+    function resetProgress() {
+      checkboxes.forEach(cb => cb.checked = false);
+      localStorage.removeItem("jobProgress");
+      updateProgress();
+    }
+
+    // Load saved state
+    window.onload = function() {
+      const savedStates = JSON.parse(localStorage.getItem("jobProgress"));
+      if (savedStates) {
+        checkboxes.forEach((cb, i) => cb.checked = savedStates[i]);
+      }
+      updateProgress();
+    }
+
+    checkboxes.forEach(cb => cb.addEventListener('change', updateProgress));
+
+    // 🎉 Confetti Animation
+    const confettiCanvas = document.getElementById('confetti');
+    const ctx = confettiCanvas.getContext('2d');
+    let confettiPieces = [];
+    let animationFrame;
+
+    function resizeCanvas() {
+      confettiCanvas.width = window.innerWidth;
+      confettiCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function ConfettiPiece() {
+      this.x = Math.random() * confettiCanvas.width;
+      this.y = Math.random() * confettiCanvas.height - confettiCanvas.height;
+      this.size = Math.random() * 8 + 5;
+      this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+      this.speed = Math.random() * 3 + 2;
+      this.angle = Math.random() * 360;
+      this.spin = Math.random() * 0.1 - 0.05;
+
+      this.update = () => {
+        this.y += this.speed;
+        this.angle += this.spin;
+        if (this.y > confettiCanvas.height) {
+          this.y = -10;
+          this.x = Math.random() * confettiCanvas.width;
+        }
+      };
+
+      this.draw = () => {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+        ctx.fillStyle = this.color;
+        ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+        ctx.restore();
+      };
+    }
+
+    function startConfetti() {
+      confettiPieces = Array.from({ length: 150 }, () => new ConfettiPiece());
+      (function animate() {
+        ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+        confettiPieces.forEach(p => {
+          p.update();
+          p.draw();
+        });
+        animationFrame = requestAnimationFrame(animate);
+      })();
+    }
+
+    function stopConfetti() {
+      cancelAnimationFrame(animationFrame);
+      ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+    }
+  </script>
+</body>
+</html>
