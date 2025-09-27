@@ -3,287 +3,128 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Job Progress Tracker</title>
+<title>Private Tracker</title>
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    background-color: #121212;
-    color: #fff;
-    padding: 20px;
-    margin: 0;
-  }
-  h1 {
-    text-align: center;
-    color: #00AAFF;
-    margin-bottom: 30px;
-  }
-  ul {
-    list-style: none;
-    padding: 0;
-    counter-reset: step;
-    position: relative;
-  }
-  ul::before {
-    content: '';
-    position: absolute;
-    left: 15px;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: #555;
-  }
-  li {
-    margin: 30px 0;
-    font-size: 18px;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    padding-left: 50px;
-    opacity: 0.6;
-  }
-  li.completed {
-    opacity: 1;
-  }
-  li::before {
-    content: counter(step);
-    counter-increment: step;
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background-color: #00AAFF;
-    color: #fff;
-    text-align: center;
-    line-height: 30px;
-    font-weight: bold;
-    z-index: 1;
-  }
-  .icon {
-    margin-right: 8px;
-  }
-  input[type="checkbox"] {
-    margin-right: 10px;
-    transform: scale(1.3);
-    vertical-align: middle;
-  }
-  .note {
-    margin-top: 5px;
-    font-size: 14px;
-    color: #ccc;
-  }
-  #progress-container {
-    width: 100%;
-    background-color: #333;
-    border-radius: 20px;
-    margin: 30px 0;
-    overflow: hidden;
-  }
-  #progress-bar {
-    width: 0%;
-    height: 25px;
-    background: linear-gradient(90deg, #00AAFF, #0088CC);
-    border-radius: 20px;
-    text-align: center;
-    color: #000;
-    font-weight: bold;
-    line-height: 25px;
-    transition: width 0.5s ease;
-  }
-  button {
-    display: block;
-    margin: 10px auto 30px;
-    padding: 10px 20px;
-    font-size: 16px;
-    border: none;
-    border-radius: 10px;
-    background-color: #0088CC;
-    color: #fff;
-    cursor: pointer;
-  }
-  button:hover {
-    background-color: #006699;
-  }
-  #popup, #milestone-msg {
-    display: none;
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-color: rgba(0,0,0,0.85);
-    color: #fff;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    z-index: 1000;
-    flex-direction: column;
-    padding: 20px;
-  }
-  #popup h2, #milestone-msg p {
-    color: #00AAFF;
-  }
-  #popup img {
-    width: 150px;
-    margin-top: 20px;
-  }
-  #popup button, #milestone-msg button {
-    background-color: #00AAFF;
-    color: #fff;
-    margin-top: 20px;
-  }
+  body { font-family: Arial, sans-serif; background: #111; color: #fff; margin:0; padding:0; }
+  .container { max-width:800px; margin:20px auto; padding:10px; }
+  h1 { text-align:center; color:#00AAFF; }
+  .step { margin:15px 0; padding:10px; border-radius:8px; background:#222; display:flex; align-items:center; justify-content:space-between; }
+  .step.completed { background:#0033FF; }
+  .step button { padding:6px 10px; border:none; border-radius:5px; cursor:pointer; background:#00AAFF; color:#fff; }
+  .progress-container { width:100%; background:#333; border-radius:10px; height:20px; margin:20px 0; }
+  .progress-bar { height:100%; width:0%; background:#00AAFF; border-radius:10px; transition:width 0.5s; }
+  .milestone-msg { font-size:0.9em; color:#0f0; margin-top:5px; }
 </style>
 </head>
 <body>
+<div class="container">
+  <h1>Private Kuwait Job Tracker</h1>
 
-<h1>Job Progress Tracker</h1>
+  <!-- Progress Bar -->
+  <div class="progress-container">
+    <div class="progress-bar" id="progress-bar"></div>
+  </div>
 
-<ul id="steps-list">
-  <li><label><input type="checkbox"> <span class="icon">📝</span>Prometric exam (MOH Kuwait)</label>
-    <input type="text" class="note" placeholder="Add note..." /></li>
-  <li><label><input type="checkbox" disabled> <span class="icon">📄</span>Documents attestation</label>
-    <input type="text" class="note" placeholder="Add note..." /></li>
-  <li><label><input type="checkbox" disabled> <span class="icon">✅</span>Documents verification (QuadraBay)</label>
-    <input type="text" class="note" placeholder="Add note..." /></li>
-  <li><label><input type="checkbox" disabled> <span class="icon">💼</span>Job offer</label>
-    <input type="text" class="note" placeholder="Add note..." /></li>
-  <li><label><input type="checkbox" disabled> <span class="icon">🛂</span>Receive Visa</label>
-    <input type="text" class="note" placeholder="Add note..." /></li>
-  <li><label><input type="checkbox" disabled> <span class="icon">✒️</span>Visa Stamping</label>
-    <input type="text" class="note" placeholder="Add note..." /></li>
-  <li><label><input type="checkbox" disabled> <span class="icon">🏥</span>Medical Test (Fit)</label>
-    <input type="text" class="note" placeholder="Add note..." /></li>
-  <li><label><input type="checkbox" disabled> <span class="icon">✈️</span>Travel</label>
-    <input type="text" class="note" placeholder="Add note..." /></li>
-</ul>
+  <!-- Steps -->
+  <div id="steps-container"></div>
 
-<div id="progress-container">
-  <div id="progress-bar">0%</div>
+  <!-- Chat -->
+  <div id="chat-container" style="position:fixed;bottom:0;right:0;width:100%;max-width:400px;background:#1a1a1a;padding:10px;border-top:3px solid #00AAFF;box-shadow:0 -2px 5px rgba(0,0,0,0.5);">
+    <div id="chat-messages" style="height:200px;overflow-y:auto;margin-bottom:10px;border:1px solid #555;padding:10px;border-radius:8px;background:#000;display:flex;flex-direction:column;"></div>
+    <input type="text" id="chat-input" placeholder="Type a message..." style="width:75%;padding:8px;border-radius:5px;border:none;margin-right:5px;">
+    <button id="chat-send" style="padding:8px 12px;border:none;border-radius:5px;background:#00AAFF;color:#fff;cursor:pointer;">Send</button>
+  </div>
 </div>
 
-<button id="reset-btn">Reset Progress</button>
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+  import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-database.js";
 
-<!-- Surprise popup -->
-<div id="popup">
-  <h2>🎉 Congratulations! 🎉</h2>
-  <p>All steps completed! Here’s a special surprise for you ❤️</p>
-  <img src="https://media.giphy.com/media/111ebonMs90YLu/giphy.gif" alt="Surprise GIF">
-  <button id="close-popup">Close</button>
-</div>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAeaNbgbfnOX5i3B3TIlZ7uwLXK86dOOgo",
+    authDomain: "private-tracker-85553.firebaseapp.com",
+    projectId: "private-tracker-85553",
+    storageBucket: "private-tracker-85553.firebasestorage.app",
+    messagingSenderId: "542425150653",
+    appId: "1:542425150653:web:76a2065694dfb155ca73d4"
+  };
 
-<!-- Milestone message -->
-<div id="milestone-msg">
-  <p id="milestone-text"></p>
-  <button id="close-msg">Close</button>
-</div>
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
 
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-<script>
-const checkboxes = document.querySelectorAll('#steps-list input[type="checkbox"]');
-const notes = document.querySelectorAll('.note');
-const progressBar = document.getElementById('progress-bar');
-const listItems = document.querySelectorAll('#steps-list li');
-const resetBtn = document.getElementById('reset-btn');
-const popup = document.getElementById('popup');
-const closePopup = document.getElementById('close-popup');
-const milestoneMsg = document.getElementById('milestone-msg');
-const milestoneText = document.getElementById('milestone-text');
-const closeMsg = document.getElementById('close-msg');
+  // Steps Data
+  const steps = [
+    { name:"Prometric exam (MOH Kuwait)", msg:"Prometric exam complete! Keep going 💪" },
+    { name:"Documents attestation", msg:"Documents attested! Great job 📄" },
+    { name:"Documents verification (QuadraBay)", msg:"Verification done! Almost there ✅" },
+    { name:"Job offer", msg:"Job offer received! Woohoo 🎉" },
+    { name:"Receive Visa", msg:"Visa received! 🛂" },
+    { name:"Visa Stamping", msg:"Visa stamped! ✈️" },
+    { name:"Medical Test (Fit)", msg:"Medical test passed! 💊" },
+    { name:"Travel", msg:"Travel complete! Surprise incoming 🎁" }
+  ];
 
-// Hinglish milestone messages
-const messages = {
-  25: "Shabaash! Shuruaat achhi hai 😃",
-  50: "Waah! Adha kaam ho gaya 🏆",
-  75: "Bas thoda aur! Almost there 💪",
-  100: "Yayy! Sab steps complete ❤️ Surprise ka time hai 🎉"
-};
+  const stepsContainer = document.getElementById('steps-container');
+  const progressBar = document.getElementById('progress-bar');
 
-let lastMilestone = 0;
+  // Initialize Steps
+  steps.forEach((step, index) => {
+    const div = document.createElement('div');
+    div.className = 'step';
+    div.id = 'step-'+index;
+    div.innerHTML = `<span>${step.name}</span> <button>Done</button><div class="milestone-msg" id="msg-${index}"></div>`;
+    stepsContainer.appendChild(div);
 
-// Unlock next step in sequence
-function unlockNext() {
-  for(let i=0; i<checkboxes.length-1; i++){
-    if(checkboxes[i].checked) checkboxes[i+1].disabled = false;
-    else checkboxes[i+1].disabled = true;
-  }
-}
-
-// Show milestone message
-function showMilestone(percent){
-  if(messages[percent] && percent !== lastMilestone){
-    lastMilestone = percent;
-    milestoneText.textContent = messages[percent];
-    milestoneMsg.style.display = "flex";
-  }
-}
-
-// Update progress and milestone confetti
-function updateProgress() {
-  let total = checkboxes.length;
-  let checked = 0;
-  checkboxes.forEach((cb, i) => {
-    if(cb.checked){
-      checked++;
-      listItems[i].classList.add('completed');
-    } else listItems[i].classList.remove('completed');
+    const btn = div.querySelector('button');
+    btn.addEventListener('click', () => completeStep(index));
   });
-  const percent = Math.round((checked / total) * 100);
-  progressBar.style.width = percent + '%';
-  progressBar.textContent = percent + '%';
-  
-  if ([25,50,75].includes(percent)) {
-    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-    showMilestone(percent);
+
+  let completedSteps = 0;
+  function completeStep(i){
+    const div = document.getElementById('step-'+i);
+    div.classList.add('completed');
+    div.querySelector('button').disabled = true;
+    document.getElementById('msg-'+i).textContent = steps[i].msg;
+
+    completedSteps++;
+    progressBar.style.width = ((completedSteps/steps.length)*100)+'%';
+
+    if(i === steps.length-1){
+      setTimeout(() => { alert("🎁 Surprise! All steps completed!"); }, 500);
+    }
   }
-  // If last step checked, show surprise popup
-  if(percent === 100){
-    confetti({ particleCount: 200, spread: 120, origin: { y: 0.6 } });
-    popup.style.display = 'flex';
-    showMilestone(percent);
+
+  // Chat Logic
+  const chatInput = document.getElementById('chat-input');
+  const chatSend = document.getElementById('chat-send');
+  const chatMessages = document.getElementById('chat-messages');
+
+  onChildAdded(ref(db,'messages'), (snapshot)=>{
+    const msg = snapshot.val();
+    addMessage(atob(msg.text), msg.user);
+  });
+
+  chatSend.addEventListener('click', ()=>{
+    const text = chatInput.value.trim();
+    if(!text) return;
+    const encrypted = btoa(text);
+    push(ref(db,'messages'), { text: encrypted, user:'you' });
+    chatInput.value = '';
+  });
+
+  function addMessage(text, user){
+    const msg = document.createElement('div');
+    msg.textContent = text;
+    msg.style.margin = '5px 0';
+    msg.style.padding = '6px 10px';
+    msg.style.borderRadius = '10px';
+    msg.style.maxWidth = '80%';
+    msg.style.wordBreak = 'break-word';
+    msg.style.background = user==='you' ? '#00AAFF' : '#AA00FF';
+    msg.style.color = user==='you' ? '#000' : '#fff';
+    msg.style.alignSelf = user==='you' ? 'flex-end' : 'flex-start';
+    chatMessages.appendChild(msg);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
   }
-  unlockNext();
-}
-
-// Load saved state
-checkboxes.forEach((cb, i) => {
-  const saved = localStorage.getItem('step-' + i);
-  if (saved === 'true') cb.checked = true;
-  cb.addEventListener('change', () => {
-    localStorage.setItem('step-' + i, cb.checked);
-    updateProgress();
-  });
-});
-
-// Load notes
-notes.forEach((note, i) => {
-  const savedNote = localStorage.getItem('note-' + i);
-  if(savedNote) note.value = savedNote;
-  note.addEventListener('input', () => {
-    localStorage.setItem('note-' + i, note.value);
-  });
-});
-
-// Reset button
-resetBtn.addEventListener('click', () => {
-  checkboxes.forEach((cb,i) => {
-    cb.checked = false;
-    cb.disabled = i !== 0;
-    localStorage.setItem('step-' + i, false);
-    notes[i].value = '';
-    localStorage.setItem('note-' + i, '');
-    listItems[i].classList.remove('completed');
-  });
-  popup.style.display = 'none';
-  milestoneMsg.style.display = 'none';
-  lastMilestone = 0;
-  updateProgress();
-});
-
-// Close popup & milestone
-closePopup.addEventListener('click', () => popup.style.display = 'none');
-closeMsg.addEventListener('click', () => milestoneMsg.style.display = 'none');
-
-// Initialize
-updateProgress();
 </script>
-
-</body>
-</html>
