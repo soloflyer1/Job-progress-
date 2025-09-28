@@ -9,99 +9,79 @@
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
 <style>
-  :root{
-    --bg1:#071029; --bg2:#0b1b2e;
-    --card: rgba(255,255,255,0.04);
-    --accent: #00AAFF;
-    --accent-dark:#006699;
-    --muted:#9aa4b2;
-  }
-  *{box-sizing:border-box}
-  body{
-    margin:0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    background: linear-gradient(135deg,#071029 0%, #0b1b2e 100%);
-    color: #e6f2ff; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
-  }
-
-  .wrap{ max-width:940px; margin:20px auto; padding:18px; transition: padding-bottom .25s ease; }
-
-  header{ text-align:center; margin-bottom:10px; }
-  h1{ margin:0; color:var(--accent); font-size:20px; }
-  .subtitle{ color:var(--muted); font-size:13px; margin-top:6px; }
-
-  /* main card */
-  .card{
-    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-    border-radius:12px; padding:18px; border:1px solid rgba(255,255,255,0.03);
-    box-shadow: 0 10px 30px rgba(2,6,23,0.6);
-  }
-
-  /* progress */
-  .progress-row{ display:flex; align-items:center; gap:12px; margin-bottom:18px; }
-  .progress-label{ font-size:13px; color:var(--muted); width:70px }
-  .progress-bar { flex:1; height:20px; border-radius:12px; background:rgba(255,255,255,0.03); overflow:hidden; position:relative }
-  .progress-fill { height:100%; width:0%; background: linear-gradient(90deg,var(--accent),var(--accent-dark)); display:flex; align-items:center; justify-content:center; color:#001; font-weight:700; font-size:12px; transition: width .45s ease; }
-
-  /* timeline */
-  .timeline{ position:relative; padding-left:64px; }
-  .timeline::before{ content:''; position:absolute; left:32px; top:16px; bottom:16px; width:4px; background:rgba(255,255,255,0.03); border-radius:4px; }
-  .timeline .line-fill{ position:absolute; left:32px; top:16px; width:4px; background: linear-gradient(180deg,var(--accent),var(--accent-dark)); border-radius:4px; z-index:0; height:0%; }
-
-  .step-card{
-    position:relative; z-index:2; display:flex; gap:12px; align-items:flex-start;
-    background:var(--card); padding:12px 14px; border-radius:10px; margin:18px 0; box-shadow: 0 6px 16px rgba(2,6,23,0.4);
-    transition: transform .22s ease, background .22s ease;
-  }
-  .step-card .bubble{
-    width:46px; height:46px; border-radius:10px; flex-shrink:0;
-    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-    display:flex; align-items:center; justify-content:center; font-size:20px; color:var(--accent);
-    border:1px solid rgba(255,255,255,0.02);
-  }
-  .step-meta{ flex:1; }
-  .step-title{ font-weight:700; margin:0 0 6px 0; font-size:15px; color:#eaf6ff }
-  .step-hint{ font-size:13px; color:var(--muted); margin-bottom:8px }
-  .note input{ width:100%; padding:8px 10px; border-radius:8px; border:none; background: rgba(255,255,255,0.02); color:#dfe9f8; outline:none; font-size:14px }
-
-  .step-actions{ display:flex; gap:8px; align-items:center }
-  .btn-done{ padding:8px 12px; border-radius:8px; border:none; cursor:pointer; background:linear-gradient(90deg,var(--accent),var(--accent-dark)); color:#001; font-weight:700; box-shadow: 0 6px 18px rgba(0,138,204,0.12) }
-  .btn-done[disabled]{ opacity:.45; cursor:default; filter:grayscale(.1) }
-
-  .step-completed{ background: linear-gradient(180deg, rgba(0,170,255,0.06), rgba(0,170,255,0.03)); border:1px solid rgba(0,170,255,0.08) }
-  .step-completed .bubble{ background: linear-gradient(90deg,#00AAFF,#0088CC); color:#001; box-shadow:0 6px 14px rgba(0,138,204,0.12) }
-
-  .controls{ display:flex; justify-content:center; gap:12px; margin-top:10px }
-
-  /* small toast */
-  .toast{ position:fixed; left:50%; transform:translateX(-50%); bottom:24px; z-index:1200; background:rgba(0,0,0,0.7); color:#fff; padding:10px 16px; border-radius:10px; display:none; font-weight:700; box-shadow: 0 8px 30px rgba(0,0,0,0.5) }
-
-  /* popup surprise */
-  .popup{ display:none; position:fixed; inset:0; background:rgba(2,6,23,0.88); z-index:2000; justify-content:center; align-items:center; padding:20px }
-  .popup .card{ max-width:520px; width:100%; text-align:center; padding:22px; border-radius:12px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); box-shadow: 0 10px 40px rgba(2,6,23,0.7) }
-  .popup h2{ color:var(--accent); margin:0 0 8px 0 }
-  .popup p{ color:#dbeeff; margin:0; font-size:15px }
-  .popup img{ width:160px; margin:14px 0; border-radius:10px }
-  .popup button{ margin-top:14px; padding:10px 16px; border-radius:8px; border:none; background:var(--accent); color:#001; font-weight:700; cursor:pointer }
-
-  /* chat UI */
-  #chat-toggle { position: fixed; right:24px; bottom:24px; z-index:1600; width:56px; height:56px; border-radius:50%; background:linear-gradient(90deg,var(--accent),var(--accent-dark)); display:flex; justify-content:center; align-items:center; font-weight:800; color:#001; box-shadow:0 14px 40px rgba(0,138,204,0.16); cursor:pointer; border:2px solid rgba(255,255,255,0.05) }
-  #chat-box { position:fixed; right:18px; bottom:18px; width:360px; max-height:78vh; border-radius:12px; overflow:hidden; z-index:1500; display:flex; flex-direction:column; background:linear-gradient(180deg,#fff,#f1faff); color:#001; box-shadow:0 20px 60px rgba(3,6,15,0.6); border:1px solid rgba(0,0,0,0.06) }
-  #chat-header{ padding:12px 14px; display:flex; justify-content:space-between; align-items:center; background:linear-gradient(90deg,var(--accent),var(--accent-dark)); color:#001; font-weight:700 }
-  #chat-messages{ padding:12px; flex:1; overflow:auto; display:flex; flex-direction:column; gap:8px; background:linear-gradient(180deg,#fff,#f7fbff) }
-  .msg{ max-width:80%; padding:8px 12px; border-radius:10px; font-size:14px; word-break:break-word }
-  .mine{ background:var(--accent); color:#001; align-self:flex-end; box-shadow: 0 6px 14px rgba(0,138,204,0.12) }
-  .theirs{ background:#e7eefc; color:#001; align-self:flex-start }
-  #chat-input-row{ display:flex; gap:8px; padding:10px; border-top:1px solid rgba(0,0,0,0.04); }
-  #chat-input{ flex:1; padding:10px; border-radius:10px; border:1px solid rgba(0,0,0,0.06); outline:none }
-  #chat-send{ padding:10px 12px; border-radius:10px; border:none; background:var(--accent); color:#001; cursor:pointer }
-  #chat-clear{ padding:10px 12px; border-radius:10px; border:none; background:#ff4d4f; color:#fff; cursor:pointer }
-
-  /* responsive */
-  @media (max-width:520px){
-    #chat-box{ right:8px; width:92%; bottom:12px; }
-    .timeline{ padding-left:48px; }
-    .step-card .bubble{ width:40px; height:40px; font-size:18px }
-  }
+:root{
+  --bg1:#071029; --bg2:#0b1b2e;
+  --card: rgba(255,255,255,0.04);
+  --accent: #00AAFF;
+  --accent-dark:#006699;
+  --muted:#9aa4b2;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: linear-gradient(135deg,#071029 0%, #0b1b2e 100%);
+  color: #e6f2ff; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+}
+.wrap{ max-width:940px; margin:20px auto; padding:18px; transition: padding-bottom .25s ease; }
+header{ text-align:center; margin-bottom:10px; }
+h1{ margin:0; color:var(--accent); font-size:20px; }
+.subtitle{ color:var(--muted); font-size:13px; margin-top:6px }
+.card{
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-radius:12px; padding:18px; border:1px solid rgba(255,255,255,0.03);
+  box-shadow: 0 10px 30px rgba(2,6,23,0.6);
+}
+.progress-row{ display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+.progress-label{ font-size:13px; color:var(--muted); width:70px }
+.progress-bar { flex:1; height:20px; border-radius:12px; background:rgba(255,255,255,0.03); overflow:hidden; position:relative }
+.progress-fill { height:100%; width:0%; background: linear-gradient(90deg,var(--accent),var(--accent-dark)); display:flex; align-items:center; justify-content:center; color:#001; font-weight:700; font-size:12px; transition: width .45s ease; }
+.timeline{ position:relative; padding-left:64px; }
+.timeline::before{ content:''; position:absolute; left:32px; top:16px; bottom:16px; width:4px; background:rgba(255,255,255,0.03); border-radius:4px; }
+.timeline .line-fill{ position:absolute; left:32px; top:16px; width:4px; background: linear-gradient(180deg,var(--accent),var(--accent-dark)); border-radius:4px; z-index:0; height:0%; }
+.step-card{
+  position:relative; z-index:2; display:flex; gap:12px; align-items:flex-start;
+  background:var(--card); padding:12px 14px; border-radius:10px; margin:18px 0; box-shadow: 0 6px 16px rgba(2,6,23,0.4);
+  transition: transform .22s ease, background .22s ease;
+}
+.step-card .bubble{
+  width:46px; height:46px; border-radius:10px; flex-shrink:0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  display:flex; align-items:center; justify-content:center; font-size:20px; color:var(--accent);
+  border:1px solid rgba(255,255,255,0.02);
+}
+.step-meta{ flex:1; }
+.step-title{ font-weight:700; margin:0 0 6px 0; font-size:15px; color:#eaf6ff }
+.step-hint{ font-size:13px; color:var(--muted); margin-bottom:8px }
+.note input{ width:100%; padding:8px 10px; border-radius:8px; border:none; background: rgba(255,255,255,0.02); color:#dfe9f8; outline:none; font-size:14px }
+.step-actions{ display:flex; gap:8px; align-items:center }
+.btn-done{ padding:8px 12px; border-radius:8px; border:none; cursor:pointer; background:linear-gradient(90deg,var(--accent),var(--accent-dark)); color:#001; font-weight:700; box-shadow: 0 6px 18px rgba(0,138,204,0.12) }
+.btn-done[disabled]{ opacity:.45; cursor:default; filter:grayscale(.1) }
+.step-completed{ background: linear-gradient(180deg, rgba(0,170,255,0.06), rgba(0,170,255,0.03)); border:1px solid rgba(0,170,255,0.08) }
+.step-completed .bubble{ background: linear-gradient(90deg,#00AAFF,#0088CC); color:#001; box-shadow:0 6px 14px rgba(0,138,204,0.12) }
+.controls{ display:flex; justify-content:center; gap:12px; margin-top:10px }
+.toast{ position:fixed; left:50%; transform:translateX(-50%); bottom:24px; z-index:1200; background:rgba(0,0,0,0.7); color:#fff; padding:10px 16px; border-radius:10px; display:none; font-weight:700; box-shadow: 0 8px 30px rgba(0,0,0,0.5) }
+.popup{ display:none; position:fixed; inset:0; background:rgba(2,6,23,0.88); z-index:2000; justify-content:center; align-items:center; padding:20px }
+.popup .card{ max-width:520px; width:100%; text-align:center; padding:22px; border-radius:12px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); box-shadow: 0 10px 40px rgba(2,6,23,0.7) }
+.popup h2{ color:var(--accent); margin:0 0 8px 0 }
+.popup p{ color:#dbeeff; margin:0; font-size:15px }
+.popup img{ width:160px; margin:14px 0; border-radius:10px }
+.popup button{ margin-top:14px; padding:10px 16px; border-radius:8px; border:none; background:var(--accent); color:#001; font-weight:700; cursor:pointer }
+#chat-toggle { position: fixed; right:24px; bottom:24px; z-index:1600; width:56px; height:56px; border-radius:50%; background:linear-gradient(90deg,var(--accent),var(--accent-dark)); display:flex; justify-content:center; align-items:center; font-weight:800; color:#001; box-shadow:0 14px 40px rgba(0,138,204,0.16); cursor:pointer; border:2px solid rgba(255,255,255,0.05) }
+#chat-box { position:fixed; right:18px; bottom:18px; width:360px; max-height:78vh; border-radius:12px; overflow:hidden; z-index:1500; display:flex; flex-direction:column; background:linear-gradient(180deg,#fff,#f1faff); color:#001; box-shadow:0 20px 60px rgba(3,6,15,0.6); border:1px solid rgba(0,0,0,0.06) }
+#chat-header{ padding:12px 14px; display:flex; justify-content:space-between; align-items:center; background:linear-gradient(90deg,var(--accent),var(--accent-dark)); color:#001; font-weight:700 }
+#chat-messages{ padding:12px; flex:1; overflow:auto; display:flex; flex-direction:column; gap:8px; background:linear-gradient(180deg,#fff,#f7fbff) }
+.msg{ max-width:80%; padding:8px 12px; border-radius:10px; font-size:14px; word-break:break-word }
+.mine{ background:var(--accent); color:#001; align-self:flex-end; box-shadow: 0 6px 14px rgba(0,138,204,0.12) }
+.theirs{ background:#e7eefc; color:#001; align-self:flex-start }
+#chat-input-row{ display:flex; gap:8px; padding:10px; border-top:1px solid rgba(0,0,0,0.04); }
+#chat-input{ flex:1; padding:10px; border-radius:10px; border:1px solid rgba(0,0,0,0.06); outline:none }
+#chat-send{ padding:10px 12px; border-radius:10px; border:none; background:var(--accent); color:#001; cursor:pointer }
+#chat-clear{ padding:10px 12px; border-radius:10px; border:none; background:#ff4d4f; color:#fff; cursor:pointer }
+@media (max-width:520px){
+  #chat-box{ right:8px; width:92%; bottom:12px; }
+  .timeline{ padding-left:48px; }
+  .step-card .bubble{ width:40px; height:40px; font-size:18px }
+}
 </style>
 </head>
 <body>
@@ -123,7 +103,6 @@
 
     <section class="timeline" id="timeline">
       <div class="line-fill" id="lineFill"></div>
-      <!-- steps will be injected by JS -->
     </section>
 
     <div class="controls">
@@ -134,7 +113,6 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- surprise popup -->
 <div class="popup" id="popup" role="dialog" aria-modal="true">
   <div class="card">
     <h2>🎉 Congratulations! 🎉</h2>
@@ -144,7 +122,6 @@
   </div>
 </div>
 
-<!-- Chat UI (minimized toggle + full box) -->
 <div id="chat-toggle" title="Open chat">💬</div>
 
 <div id="chat-box" aria-hidden="true" style="display:none">
@@ -162,365 +139,238 @@
   </div>
 </div>
 
-<!-- Firebase (module) + app logic -->
 <script type="module">
-  // -------------- Firebase imports --------------
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
-  import { getDatabase, ref, push, onChildAdded, onValue, remove } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-database.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+import { getDatabase, ref, push, onChildAdded, onValue, remove } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-database.js";
 
-  // ---------- YOUR firebaseConfig (keep yours) ----------
-  const firebaseConfig = {
-    apiKey: "AIzaSyAeaNbgbfnOX5i3B3TIlZ7uwLXK86dOOgo",
-    authDomain: "private-tracker-85553.firebaseapp.com",
-    projectId: "private-tracker-85553",
-    storageBucket: "private-tracker-85553.firebasestorage.app",
-    messagingSenderId: "542425150653",
-    appId: "1:542425150653:web:76a2065694dfb155ca73d4"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyAeaNbgbfnOX5i3B3TIlZ7uwLXK86dOOgo",
+  authDomain: "private-tracker-85553.firebaseapp.com",
+  projectId: "private-tracker-85553",
+  storageBucket: "private-tracker-85553.firebasestorage.app",
+  messagingSenderId: "542425150653",
+  appId: "1:542425150653:web:76a2065694dfb155ca73d4"
+};
 
-  // init firebase
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-  const messagesRef = ref(db, 'messages');
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const messagesRef = ref(db, 'messages');
 
-  // ---------- App data (steps) ----------
-  const STEPS = [
-    { icon:'📝', title:'Prometric exam (MOH Kuwait)', hint:'Prometric exam complete! Keep going 💪' },
-    { icon:'📄', title:'Documents attestation', hint:'Documents attested! Great job 📄' },
-    { icon:'✅', title:'Documents verification (QuadraBay)', hint:'Verification done! Almost there ✅' },
-    { icon:'💼', title:'Job offer', hint:'Job offer received! Woohoo 🎉' },
-    { icon:'🛂', title:'Receive Visa', hint:'Visa received! 🛂' },
-    { icon:'✒️', title:'Visa Stamping', hint:'Visa stamped! ✈️' },
-    { icon:'🏥', title:'Medical Test (Fit)', hint:'Medical test passed! 💊' },
-    { icon:'✈️', title:'Travel', hint:'Travel complete! Surprise incoming 🎁' }
-  ];
+const STEPS = [
+  { icon:'📝', title:'Prometric exam (MOH Kuwait)', hint:'Prometric exam complete! Keep going 💪' },
+  { icon:'📄', title:'Documents attestation', hint:'Documents attested! Great job 📄' },
+  { icon:'✅', title:'Documents verification (QuadraBay)', hint:'Verification done! Almost there ✅' },
+  { icon:'💼', title:'Job offer', hint:'Job offer received! Woohoo 🎉' },
+  { icon:'🛂', title:'Receive Visa', hint:'Visa received! 🛂' },
+  { icon:'✒️', title:'Visa Stamping', hint:'Visa stamped! ✈️' },
+  { icon:'🏥', title:'Medical Test (Fit)', hint:'Medical test passed! 💊' },
+  { icon:'✈️', title:'Travel', hint:'Travel complete! Surprise incoming 🎁' }
+];
 
-  // ---------- DOM refs ----------
-  const timeline = document.getElementById('timeline');
-  const lineFill = document.getElementById('lineFill');
-  const progressFill = document.getElementById('progressFill');
-  const percentText = document.getElementById('percentText');
-  const toast = document.getElementById('toast');
-  const popup = document.getElementById('popup');
-  const popupClose = document.getElementById('popupClose');
-  const popupText = document.getElementById('popupText');
-  const wrap = document.getElementById('wrap');
+const timeline = document.getElementById('timeline');
+const lineFill = document.getElementById('lineFill');
+const progressFill = document.getElementById('progressFill');
+const percentText = document.getElementById('percentText');
+const toast = document.getElementById('toast');
+const popup = document.getElementById('popup');
+const popupClose = document.getElementById('popupClose');
+const popupText = document.getElementById('popupText');
+const wrap = document.getElementById('wrap');
+const chatToggle = document.getElementById('chat-toggle');
+const chatBox = document.getElementById('chat-box');
+const chatClose = document.getElementById('chat-close');
+const chatMessages = document.getElementById('chat-messages');
+const chatInput = document.getElementById('chat-input');
+const chatSend = document.getElementById('chat-send');
+const chatClear = document.getElementById('chat-clear');
+const resetBtn = document.getElementById('resetBtn');
 
-  // chat refs
-  const chatToggle = document.getElementById('chat-toggle');
-  const chatBox = document.getElementById('chat-box');
-  const chatClose = document.getElementById('chat-close');
-  const chatMessages = document.getElementById('chat-messages');
-  const chatInput = document.getElementById('chat-input');
-  const chatSend = document.getElementById('chat-send');
-  const chatClear = document.getElementById('chat-clear');
+let CLIENT_ID = localStorage.getItem('pt_client_id');
+if(!CLIENT_ID){ CLIENT_ID = 'c_'+Math.random().toString(36).slice(2,10); localStorage.setItem('pt_client_id', CLIENT_ID); }
 
-  // reset button
-  const resetBtn = document.getElementById('resetBtn');
+let lastShownMilestone = Number(localStorage.getItem('pt_last_milestone')||0);
 
-  // client id for identifying own messages
-  let CLIENT_ID = localStorage.getItem('pt_client_id');
-  if(!CLIENT_ID){
-    CLIENT_ID = 'c_'+Math.random().toString(36).slice(2,10);
-    localStorage.setItem('pt_client_id', CLIENT_ID);
-  }
-
-  // last milestone shown in this session (prevent duplicate confetti)
-  let lastShownMilestone = Number(localStorage.getItem('pt_last_milestone')||0);
-
-  // ---------- render steps ----------
-  function renderSteps(){
-    // clear any previous (keeping lineFill as first child)
-    Array.from(timeline.querySelectorAll('.step-card')).forEach(n=>n.remove());
-
-    STEPS.forEach((s, i) => {
-      const idx = i+1;
-      const card = document.createElement('div');
-      card.className = 'step-card';
-      card.id = 'step-'+idx;
-      card.innerHTML = `
-        <div class="bubble">${s.icon}</div>
-        <div class="step-meta">
-          <div class="step-title">${s.title}</div>
-          <div class="step-hint" id="hint-${idx}">${s.hint}</div>
-          <div class="note"><input data-step="${idx}" placeholder="Add a note (optional)" /></div>
-        </div>
-        <div class="step-actions">
-          <button class="btn-done" data-step="${idx}">Done ✅</button>
-        </div>
-      `;
-      timeline.appendChild(card);
-    });
-  }
-
-  renderSteps();
-
-  // ---------- load saved state (steps & notes) ----------
-  function loadState(){
-    STEPS.forEach((_, i) => {
-      const idx = i+1;
-      const done = localStorage.getItem('pt_step_'+idx) === '1';
-      const note = localStorage.getItem('pt_note_'+idx) || '';
-      const card = document.getElementById('step-'+idx);
-      const btn = card.querySelector('.btn-done');
-      const noteInput = card.querySelector('input[data-step]');
-      noteInput.value = note;
-      if(done){
-        card.classList.add('step-completed');
-        btn.disabled = true;
-      } else {
-        // lock if previous not done (first step unlocked)
-        if(idx === 1) btn.disabled = false;
-        else {
-          const prevDone = localStorage.getItem('pt_step_'+(idx-1)) === '1';
-          btn.disabled = !prevDone;
-        }
-      }
-    });
-    updateProgressVisual();
-  }
-
-  // save note on input
-  timeline.addEventListener('input', (e) => {
-    const t = e.target;
-    if(t.matches('input[data-step]')){
-      const idx = t.getAttribute('data-step');
-      localStorage.setItem('pt_note_'+idx, t.value);
-    }
+function renderSteps(){
+  Array.from(timeline.querySelectorAll('.step-card')).forEach(n=>n.remove());
+  STEPS.forEach((s,i)=>{
+    const idx = i+1;
+    const card = document.createElement('div');
+    card.className='step-card';
+    card.id='step-'+idx;
+    card.innerHTML=`
+      <div class="bubble">${s.icon}</div>
+      <div class="step-meta">
+        <div class="step-title">${s.title}</div>
+        <div class="step-hint" id="hint-${idx}">${s.hint}</div>
+        <div class="note"><input data-step="${idx}" placeholder="Add a note (optional)" /></div>
+      </div>
+      <div class="step-actions"><button class="btn-done" data-step="${idx}">Done ✅</button></div>
+    `;
+    timeline.appendChild(card);
   });
+}
+renderSteps();
 
-  // Done button click handling (delegated)
-  timeline.addEventListener('click', (e) => {
-    const btn = e.target.closest('.btn-done');
-    if(!btn) return;
-    const idx = Number(btn.getAttribute('data-step'));
-    tryMarkStepDone(idx);
-  });
-
-  function tryMarkStepDone(idx){
-    // enforce sequence: previous must be done
-    if(idx > 1){
-      const prevDone = localStorage.getItem('pt_step_'+(idx-1)) === '1';
-      if(!prevDone){
-        showToast('⚠️ Pehle pichla step complete karo (Complete previous step first).');
-        return;
-      }
-    }
-    // mark done
-    markStepDone(idx);
-  }
-
-  function markStepDone(idx){
+function loadState(){
+  STEPS.forEach((_,i)=>{
+    const idx=i+1;
+    const done = localStorage.getItem('pt_step_'+idx)==='1';
+    const note = localStorage.getItem('pt_note_'+idx)||'';
     const card = document.getElementById('step-'+idx);
-    if(card.classList.contains('step-completed')) return;
-    card.classList.add('step-completed');
     const btn = card.querySelector('.btn-done');
-    btn.disabled = true;
-    localStorage.setItem('pt_step_'+idx, '1');
-
-    // unlock next
-    if(idx < STEPS.length){
-      const nextBtn = document.querySelector(`#step-${idx+1} .btn-done`);
-      if(nextBtn) nextBtn.disabled = false;
-    }
-
-    // show hint / milestone
-    showToast(STEPS[idx-1].hint);
-
-    // update progress and check final
-    updateProgressVisual();
-  }
-
-  // Reset all progress and notes
-  resetBtn.addEventListener('click', () => {
-    if(!confirm('Reset all progress and notes?')) return;
-    STEPS.forEach((_,i)=> {
-      const idx = i+1;
-      localStorage.removeItem('pt_step_'+idx);
-      localStorage.removeItem('pt_note_'+idx);
-      const card = document.getElementById('step-'+idx);
-      card.classList.remove('step-completed');
-      const btn = card.querySelector('.btn-done');
-      btn.disabled = (idx !== 1);
-      const noteInput = card.querySelector('input[data-step]');
-      if(noteInput) noteInput.value = '';
-    });
-    lastShownMilestone = 0;
-    localStorage.setItem('pt_last_milestone','0');
-    updateProgressVisual();
-  });
-
-  // ---------- progress visuals & milestones ----------
-  function updateProgressVisual(){
-    const total = STEPS.length;
-    let doneCount = 0;
-    STEPS.forEach((_,i) => {
-      const idx = i+1;
-      if(localStorage.getItem('pt_step_'+idx) === '1') doneCount++;
-    });
-    const percent = Math.round((doneCount/total)*100);
-    progressFill.style.width = percent + '%';
-    progressFill.textContent = percent + '%';
-    percentText.textContent = percent + '%';
-
-    // vertical line fill height
-    const tl = timeline;
-    const topPad = 16, bottomPad = 16;
-    const rect = tl.getBoundingClientRect();
-    const height = Math.max(0, rect.height - topPad - bottomPad);
-    const fillPx = Math.round((percent/100) * height);
-    lineFill.style.height = fillPx + 'px';
-
-    // milestones at 25,50,75,100
-    [25,50,75,100].forEach(p => {
-      if(percent >= p && lastShownMilestone < p){
-        lastShownMilestone = p;
-        localStorage.setItem('pt_last_milestone', String(lastShownMilestone));
-        // Hinglish messages
-        const messages = {
-          25: "Shabaash! Shuruaat achhi hai 😃",
-          50: "Waah! Adha kaam ho gaya 🏆",
-          75: "Bas thoda aur! Almost there 💪",
-          100: "Yayy! Sab steps complete ❤️ Surprise ka time hai 🎉"
-        };
-        showToast(messages[p]);
-        // confetti for milestones (50/75/100 heavier)
-        const count = p===100 ? 200 : 90;
-        confetti({ particleCount: count, spread: 80 });
-        if(p===100){
-          // final popup content
-          popupText.textContent = "Yayy! Sab steps complete — surprise for you ❤️";
-          popup.style.display = 'flex';
-        }
-      }
-    });
-  }
-
-  // small toast
-  let toastTimer = null;
-  function showToast(txt, ms=2500){
-    toast.textContent = txt;
-    toast.style.display = 'flex';
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(()=> toast.style.display = 'none', ms);
-  }
-
-  // popup close
-  popupClose.addEventListener('click', ()=> { popup.style.display = 'none'; });
-
-  // ---------- chat: UI behavior (minimize / expand & avoid overlap) ----------
-  function openChat(){
-    chatBox.style.display = 'flex';
-    chatBox.setAttribute('aria-hidden','false');
-    chatToggle.style.display = 'none';
-    // push page content up so steps not hidden
-    const h = chatBox.offsetHeight + 32; // some spacing
-    wrap.style.paddingBottom = h + 'px';
-    // focus input on open (mobile convenience)
-    setTimeout(()=> chatInput.focus(), 200);
-  }
-  function minimizeChat(){
-    chatBox.style.display = 'none';
-    chatBox.setAttribute('aria-hidden','true');
-    chatToggle.style.display = 'flex';
-    wrap.style.paddingBottom = ''; // reset
-  }
-
-  // init chat minimized by default to avoid blocking
-  minimizeChat();
-
-  chatToggle.addEventListener('click', ()=> { openChat(); });
-  chatClose.addEventListener('click', ()=> { minimizeChat(); });
-
-  // when window resizes and chat is open, update padding
-  window.addEventListener('resize', ()=> {
-    if(chatBox.style.display !== 'none'){
-      const h = chatBox.offsetHeight + 32;
-      wrap.style.paddingBottom = h + 'px';
+    const noteInput = card.querySelector('input[data-step]');
+    noteInput.value = note;
+    if(done){ card.classList.add('step-completed'); btn.disabled=true; }
+    else{
+      btn.disabled = (idx>1 && localStorage.getItem('pt_step_'+(idx-1))!=='1');
     }
   });
-
-  // ---------- Firebase chat wiring ----------
-  // Clear any old messages in UI then attach listeners
-  function clearChatUI(){ chatMessages.innerHTML = ''; }
-
-  // Attach listener for existing + new messages
-  onChildAdded(messagesRef, (snap) => {
-    const m = snap.val();
-    if(!m) return;
-    const text = (function(){ try{ return atob(m.text); }catch(e){ return m.text; } })();
-    appendChatMessage(text, m.clientId || 'other', m.ts || Date.now());
-  });
-
-  // Also watch top-level value so if someone removes the node we clear UI
-  onValue(messagesRef, (snap) => {
-    if(!snap.exists()){
-      clearChatUI();
-    }
-  });
-
-  function appendChatMessage(text, senderId, ts){
-    const div = document.createElement('div');
-    const mine = (senderId === CLIENT_ID);
-    div.className = 'msg ' + (mine ? 'mine' : 'theirs');
-    const time = new Date(ts);
-    const timeStr = time.toLocaleString();
-    div.innerHTML = `<div style="margin-bottom:6px">${escapeHtml(text)}</div><div style="font-size:11px;color:#6b7280;margin-top:6px">${timeStr}</div>`;
-    chatMessages.appendChild(div);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-    // also save small local history for quick view (optional)
-    saveChatLocally({text, senderId, ts});
-  }
-
-  // send chat
-  chatSend.addEventListener('click', sendChat);
-  chatInput.addEventListener('keydown', (e)=> { if(e.key === 'Enter') sendChat(); });
-
-  function sendChat(){
-    const txt = chatInput.value.trim();
-    if(!txt) return;
-    const enc = btoa(txt); // lightweight encoding (not E2E)
-    push(messagesRef, { clientId: CLIENT_ID, text: enc, ts: Date.now() });
-    chatInput.value = '';
-  }
-
-  // Clear entire chat from database (no confirmation per your request)
-  chatClear.addEventListener('click', ()=> {
-    // remove node
-    remove(messagesRef);
-    // local UI cleared by onValue listener or do immediately
-    clearChatUI();
-  });
-
-  // store local copy of recent messages (optional)
-  function saveChatLocally(obj){
-    try{
-      const arr = JSON.parse(localStorage.getItem('pt_chat_local') || '[]');
-      arr.push(obj);
-      while(arr.length>300) arr.shift();
-      localStorage.setItem('pt_chat_local', JSON.stringify(arr));
-    }catch(e){}
-  }
-  // load local cache quickly (so UI shows recent messages until Firebase pushes)
-  (function loadLocalChat(){
-    try{
-      const arr = JSON.parse(localStorage.getItem('pt_chat_local') || '[]');
-      arr.forEach(m => appendChatMessage(m.text, m.senderId, m.ts));
-    }catch(e){}
-  })();
-
-  // ---------- helper: escape HTML ----------
-  function escapeHtml(s){ return String(s).replace(/[&<>"']/g, (c)=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-  // ---------- init state ----------
-  loadState();
   updateProgressVisual();
+}
 
-  // Ensure timeline fill recomputes on resize
-  window.addEventListener('resize', updateProgressVisual);
+timeline.addEventListener('input', e=>{
+  const t=e.target;
+  if(t.matches('input[data-step]')){
+    const idx=t.getAttribute('data-step');
+    localStorage.setItem('pt_note_'+idx,t.value);
+  }
+});
 
-  // ---------- optional: helper confetti wrapper ----------
-  function confetti(opts){ try{ window.confetti && window.confetti(opts); }catch(e){ /* ignore */ } }
+timeline.addEventListener('click', e=>{
+  const btn=e.target.closest('.btn-done');
+  if(!btn) return;
+  const idx=Number(btn.getAttribute('data-step'));
+  if(idx>1 && localStorage.getItem('pt_step_'+(idx-1))!=='1'){ showToast('⚠️ Pehle pichla step complete karo'); return; }
+  markStepDone(idx);
+});
+
+function markStepDone(idx){
+  const card=document.getElementById('step-'+idx);
+  if(card.classList.contains('step-completed')) return;
+  card.classList.add('step-completed');
+  const btn=card.querySelector('.btn-done'); btn.disabled=true;
+  localStorage.setItem('pt_step_'+idx,'1');
+  if(idx<STEPS.length){
+    const nextBtn=document.querySelector(`#step-${idx+1} .btn-done`);
+    if(nextBtn) nextBtn.disabled=false;
+  }
+  showToast(STEPS[idx-1].hint);
+  updateProgressVisual();
+}
+
+resetBtn.addEventListener('click', ()=>{
+  if(!confirm('Reset all progress and notes?')) return;
+  STEPS.forEach((_,i)=>{
+    const idx=i+1;
+    localStorage.removeItem('pt_step_'+idx);
+    localStorage.removeItem('pt_note_'+idx);
+    const card=document.getElementById('step-'+idx);
+    card.classList.remove('step-completed');
+    const btn=card.querySelector('.btn-done');
+    btn.disabled = (idx>1);
+    const noteInput=card.querySelector('input[data-step]');
+    if(noteInput) noteInput.value='';
+  });
+  lastShownMilestone=0;
+  localStorage.setItem('pt_last_milestone','0');
+  updateProgressVisual();
+});
+
+function updateProgressVisual(){
+  const total=STEPS.length;
+  let doneCount=0;
+  STEPS.forEach((_,i)=>{
+    if(localStorage.getItem('pt_step_'+(i+1))==='1') doneCount++;
+  });
+  const percent=Math.round((doneCount/total)*100);
+  progressFill.style.width=percent+'%'; progressFill.textContent=percent+'%';
+  percentText.textContent=percent+'%';
+  const rect=timeline.getBoundingClientRect();
+  const fillPx=Math.round((percent/100)*(rect.height-32));
+  lineFill.style.height=fillPx+'px';
+  [25,50,75,100].forEach(p=>{
+    if(percent>=p && lastShownMilestone<p){
+      lastShownMilestone=p; localStorage.setItem('pt_last_milestone',String(lastShownMilestone));
+      const messages={25:"Shabaash! Shuruaat achhi hai 😃",50:"Waah! Adha kaam ho gaya 🏆",75:"Bas thoda aur! Almost there 💪",100:"Yayy! Sab steps complete ❤️ Surprise ka time hai 🎉"};
+      showToast(messages[p]);
+      const count=p===100?200:90;
+      confetti({particleCount:count,spread:80});
+      if(p===100){ popupText.textContent="Yayy! Sab steps complete — surprise for you ❤️"; popup.style.display='flex'; }
+    }
+  });
+}
+
+let toastTimer=null;
+function showToast(txt,ms=2500){
+  toast.textContent=txt; toast.style.display='flex';
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>toast.style.display='none',ms);
+}
+
+popupClose.addEventListener('click',()=>{popup.style.display='none';});
+
+function openChat(){ chatBox.style.display='flex'; chatBox.setAttribute('aria-hidden','false'); chatToggle.style.display='none'; wrap.style.paddingBottom=(chatBox.offsetHeight+32)+'px'; setTimeout(()=>chatInput.focus(),200);}
+function minimizeChat(){ chatBox.style.display='none'; chatBox.setAttribute('aria-hidden','true'); chatToggle.style.display='flex'; wrap.style.paddingBottom='';}
+minimizeChat();
+chatToggle.addEventListener('click',()=>openChat());
+chatClose.addEventListener('click',()=>minimizeChat());
+window.addEventListener('resize',()=>{ if(chatBox.style.display!=='none'){ wrap.style.paddingBottom=(chatBox.offsetHeight+32)+'px'; } });
+
+function clearChatUI(){ chatMessages.innerHTML=''; }
+onChildAdded(messagesRef,snap=>{
+  const m=snap.val();
+  if(!m) return;
+  const text=(function(){ try{return atob(m.text);}catch(e){return m.text;} })();
+  appendChatMessage(text,m.clientId||'other',m.ts||Date.now());
+});
+onValue(messagesRef,snap=>{ if(!snap.exists()){ clearChatUI(); } });
+
+function appendChatMessage(text,senderId,ts){
+  const div=document.createElement('div');
+  const mine=(senderId===CLIENT_ID);
+  div.className='msg '+(mine?'mine':'theirs');
+  const time=new Date(ts);
+  const timeStr=time.toLocaleString();
+  div.innerHTML=`<div style="margin-bottom:6px">${escapeHtml(text)}</div><div style="font-size:11px;color:#6b7280;margin-top:6px">${timeStr}</div>`;
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop=chatMessages.scrollHeight;
+  saveChatLocally({text,senderId,ts});
+}
+
+chatSend.addEventListener('click',sendChat);
+chatInput.addEventListener('keydown',e=>{ if(e.key==='Enter') sendChat(); });
+
+function sendChat(){
+  const txt=chatInput.value.trim(); if(!txt) return;
+  const enc=btoa(txt);
+  push(messagesRef,{clientId:CLIENT_ID,text:enc,ts:Date.now()});
+  chatInput.value='';
+}
+
+chatClear.addEventListener('click',()=>{ remove(messagesRef); clearChatUI(); });
+
+function saveChatLocally(obj){
+  try{
+    const arr=JSON.parse(localStorage.getItem('pt_chat_local')||'[]');
+    arr.push(obj);
+    while(arr.length>300) arr.shift();
+    localStorage.setItem('pt_chat_local',JSON.stringify(arr));
+  }catch(e){}
+}
+
+(function loadLocalChat(){
+  try{
+    const arr=JSON.parse(localStorage.getItem('pt_chat_local')||'[]');
+    arr.forEach(m=>appendChatMessage(m.text,m.senderId,m.ts));
+  }catch(e){}
+})();
+
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+loadState();
+updateProgressVisual();
+window.addEventListener('resize',updateProgressVisual);
+function confetti(opts){ try{ window.confetti&&window.confetti(opts); }catch(e){} }
 </script>
 </body>
 </html>
